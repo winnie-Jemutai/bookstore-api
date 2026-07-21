@@ -66,6 +66,19 @@ def list_books(
 
 
 # ============================================================
+# SEARCH BOOKS
+# ============================================================
+
+@app.get("/books/search", response_model=List[Book])
+def search_books(q: str, session: Session = Depends(get_session)):
+    query = select(Book).where(
+        (Book.title.contains(q)) |
+        (Book.author.contains(q))
+    )
+
+    return session.exec(query).all()
+
+# ============================================================
 # GET BOOK BY ID
 # ============================================================
 
@@ -123,24 +136,3 @@ def delete_book(book_id: int, session: Session = Depends(get_session)):
     session.commit()
 
     return None
-
-
-# ============================================================
-# SEARCH BOOKS
-# ============================================================
-
-@app.get("/books/search", response_model=List[Book])
-def search_books(q: str, session: Session = Depends(get_session)):
-    query = select(Book).where(
-        Book.title.contains(q) | Book.author.contains(q)
-    )
-
-    return session.exec(query).all()
-@app.get("/books/{book_id}", response_model=Book)
-def get_book(book_id: int, session: Session = Depends(get_session)):
-    book = session.get(Book, book_id)
-
-    if not book:
-        raise HTTPException(status_code=404, detail="Book not found")
-
-    return book
